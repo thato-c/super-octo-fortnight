@@ -2,7 +2,7 @@
  * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
  * Click nbfs://nbhost/SystemFileSystem/Templates/GUIForms/JFrame.java to edit this template
  */
-
+import java.util.Stack;
 /**
  *
  * @author tchit
@@ -255,8 +255,104 @@ public class Calculator extends javax.swing.JFrame {
         pack();
     }// </editor-fold>//GEN-END:initComponents
 
+    public static double evaluateExpression(String expression){
+        // Remove spaces and convert to lowercase
+        expression = expression.replaceAll("\\s", "").toLowerCase();
+        
+        Stack<Double> valueStack = new Stack<>();
+        Stack<Character> operatorStack = new Stack<>();
+        
+        int index = 0;
+        while (index < expression.length()){
+            char ch = expression.charAt(index);
+            
+            if (Character.isDigit(ch) || (ch == '.')){
+                // Parse and push the number onto the value stack
+                StringBuilder number = new StringBuilder();
+                while (index < expression.length() && 
+                        (Character.isDigit(expression.charAt(index)) ||
+                        expression.charAt(index) == '.')){
+                    index++;
+                }
+                valueStack.push(Double.valueOf(number.toString()));
+            } else if (ch == '+' || ch == '-' || ch == '*' || ch == '/'){
+                // Process operators
+                while (!operatorStack.isEmpty() && hasHigherPrecedence(ch, operatorStack.peek())){
+                    double operand2 = valueStack.pop();
+                    double operand1 = valueStack.pop();
+                    char operator = operatorStack.pop();
+                    double result = applyOperator(operand1, operand2, operator);
+                    valueStack.push(result);
+                }
+                operatorStack.push(ch);
+                index++;
+            } else {
+                // Invalid character in the expression
+                throw new IllegalArgumentException("Invalid character: " + ch);
+            }
+        }
+        
+        // Process any remaining operators
+        while (!operatorStack.isEmpty()){
+            double operand2 = valueStack.pop();
+            double operand1 = valueStack.pop();
+            char operator = operatorStack.pop();
+            double result = applyOperator(operand1, operand2, operator);
+            valueStack.push(result);
+        }
+        
+        // The final result should be on the value stack
+        if (valueStack.size() == 1){
+            return valueStack.pop();
+        } else {
+            throw new IllegalArgumentException("Invalid expression");
+        }
+    }
+    
+    private static boolean hasHigherPrecedence(char operator1, char operator2){
+        return (operator2 == '+' || operator2 == '-') || 
+                (operator1 == '*' || operator1 == '/');
+    }
+    
+    private static double applyOperator(double operand1, double operand2, char operator){
+        switch (operator){
+            case '+':
+                return operand1 + operand2;
+            case '-':
+                return operand1 - operand2;
+            case '*':
+                return operand1 * operand2;
+            case '/':
+                if (operand2 == 0){
+                    throw new ArithmeticException("Division by zero");
+                }
+                return operand1 / operand2;
+            default:
+                throw new IllegalArgumentException("Invalid operator: " + operator);
+        }
+    }
+    
     private void btnComputeActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnComputeActionPerformed
-        // TODO add your handling code here:
+        String expression = tfOutput.getText().trim(); // Remove leading/trailing whitespace
+
+        // Check if the expression is not empty
+        if(expression.charAt(0) != '+' || 
+                expression.charAt(0) != '-' ||
+                expression.charAt(0) != '*' ||
+                expression.charAt(0) != '/' ||
+                expression.charAt(-1) != '+' || 
+                expression.charAt(-1) != '-' ||
+                expression.charAt(-1) != '*' ||
+                expression.charAt(-1) != '/') {
+            System.err.println("Error: Can't start or end with an operator");
+        }
+        else if (!expression.isEmpty()) {
+            System.out.println("Evaluate expression");
+        }
+        else {
+            // Handle the case where the expression is empty
+            System.err.println("Error: Expression is empty");
+        }
     }//GEN-LAST:event_btnComputeActionPerformed
 
     private void btnDivideActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnDivideActionPerformed
@@ -278,7 +374,9 @@ public class Calculator extends javax.swing.JFrame {
     }//GEN-LAST:event_btnSubtractActionPerformed
 
     private void btnAddActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnAddActionPerformed
-        // TODO add your handling code here:
+        String currentText = tfOutput.getText();
+        String newText = currentText + "+";
+        tfOutput.setText(newText);
     }//GEN-LAST:event_btnAddActionPerformed
 
     private void btnOneActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnOneActionPerformed
