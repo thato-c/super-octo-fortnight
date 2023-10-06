@@ -2,6 +2,8 @@
  * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
  * Click nbfs://nbhost/SystemFileSystem/Templates/GUIForms/JFrame.java to edit this template
  */
+import java.awt.List;
+import java.util.ArrayList;
 import java.util.Stack;
 /**
  *
@@ -334,22 +336,64 @@ public class Calculator extends javax.swing.JFrame {
     
     private void btnComputeActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnComputeActionPerformed
         String expression = tfOutput.getText().trim(); // Remove leading/trailing whitespace
+        expression = expression.replaceAll("\\s", "").toLowerCase();
 
         // Check if the expression is not empty
-        if(expression.charAt(0) != '+' || 
-                expression.charAt(0) != '-' ||
-                expression.charAt(0) != '*' ||
-                expression.charAt(0) != '/' ||
-                expression.charAt(-1) != '+' || 
-                expression.charAt(-1) != '-' ||
-                expression.charAt(-1) != '*' ||
-                expression.charAt(-1) != '/') {
+        if(expression.charAt(0) == '+' || 
+                expression.charAt(0) == '-' ||
+                expression.charAt(0) == '*' ||
+                expression.charAt(0) == '/' ||
+                expression.charAt(expression.length() - 1) == '+' || 
+                expression.charAt(expression.length() - 1) == '-' ||
+                expression.charAt(expression.length() - 1) == '*' ||
+                expression.charAt(expression.length() - 1) == '/') {
             System.err.println("Error: Can't start or end with an operator");
         }
         else if (!expression.isEmpty()) {
             System.out.println("Evaluate expression");
+            
+            // Evaluate Expression
+            
+            // Separate values from operators
+            Stack<Double> valueStack = new Stack<>();
+            Stack<Character> operatorStack = new Stack<>();
+            
+            int index = 0;
+            while (index < expression.length()){
+                char ch = expression.charAt(index);
+                
+                if (Character.isDigit(ch)){
+                    // Parse and push the number onto the value stack
+                    StringBuilder number = new StringBuilder();
+                    while (index < expression.length() &&
+                       (Character.isDigit(expression.charAt(index)) || 
+                            expression.charAt(index) == '.')) {
+                        number.append(expression.charAt(index));
+                    index++;
+                    }
+                    valueStack.push(Double.valueOf(number.toString()));
+                    System.out.println(valueStack.pop());
+                } else if (ch == '+' || ch == '-' || ch == '*' || ch == '/') {
+                    // Process operators
+                    while (!operatorStack.isEmpty() && hasHigherPrecedence(ch, operatorStack.peek())) {
+                        double operand2 = valueStack.pop();
+                        double operand1 = valueStack.pop();
+                        char operator = operatorStack.pop();
+                        double result = applyOperator(operand1, operand2, operator);
+                        valueStack.push(result);
+                }
+                operatorStack.push(ch);
+                index++;
+                } else {
+                // Invalid character in the expression
+                throw new IllegalArgumentException("Invalid character: " + ch);
+                }
+            }
+            
+            System.out.println(valueStack);
+            System.out.println(operatorStack);
         }
-        else {
+        else if (expression.isEmpty()) {
             // Handle the case where the expression is empty
             System.err.println("Error: Expression is empty");
         }
